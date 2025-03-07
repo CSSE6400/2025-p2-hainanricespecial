@@ -24,7 +24,8 @@ PUT {{baseUrl}}/api/v1/todos/1
 Content-Type: application/json
 
 {
-    "title": "updated title"
+    "title": "updated title",
+    "description": "This is an updated test todo"
 }
 
 ### Delete a Todo
