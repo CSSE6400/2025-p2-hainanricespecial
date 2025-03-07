@@ -65,6 +65,9 @@ def get_todo(todo_id):
 @api.route('/todos', methods=['POST'])
 def create_todo():
 
+    # Create a parameter for allowed fields
+    allowed_parameters = {'title', 'description', 'completed', 'created_at', 'updated_at', 'deadline_at'}
+
     todo = Todo(
         title=request.json.get('title'),
         description=request.json.get('description'),
@@ -73,6 +76,10 @@ def create_todo():
 
     if 'deadline_at' in request.json:
         todo.deadline_at = datetime.fromisoformat(request.json.get('deadline_at'))
+
+    # Check for erroneous fields.
+    if set(request.json.keys()) not in allowed_parameters:
+         return jsonify({'error': 'Erroneous field detected.'}), 400
     
     # Adds a new record to the database or will an update an existing record
     db.session.add(todo)
@@ -92,6 +99,17 @@ def update_todo(todo_id):
     todo = Todo.query.get(todo_id)
     if todo is None:
          return jsonify({'error': 'Todo not found'}), 404
+
+    # Create a parameter for allowed fields
+    allowed_parameters = {'title', 'description', 'completed', 'created_at', 'updated_at', 'deadline_at'}
+
+    # Check for erroneous fields.
+    if set(request.json.keys()) not in allowed_parameters:
+         return jsonify({'error': 'Erroneous field detected.'}), 400
+
+    # Stop any ID change
+    if 'id' in request.json:
+        return jsonify({'error': 'You cannot change the ID.'}), 400
     
     todo.title = request.json.get('title', todo.title)
     todo.description = request.json.get('description', todo.description)
@@ -106,9 +124,9 @@ def update_todo(todo_id):
 def delete_todo(todo_id):
 
     todo = Todo.query.get(todo_id)
-    
+
     if todo is None:
-         return jsonify({'error': 'Todo not found'}), 404
+         return jsonify({'error': 'Todo not found'}), 200
 
     db.session.delete(todo)
     db.session.commit()
