@@ -15,7 +15,6 @@ class Todo(db.Model):
 
     # This columns is False by default.
     completed = db.Column(db.Boolean, nullable=False, default=False)
-
     deadline_at = db.Column(db.DateTime, nullable=True)
 
     # This column has a default value which is a function call.
@@ -28,9 +27,7 @@ class Todo(db.Model):
 
     # This is a helper method to convert the model to a dictionary. 
     def to_dict(self):
-
-        return
-        {
+        return {
             'id': self.id,
             'title': self.title,
             'description': self.description,

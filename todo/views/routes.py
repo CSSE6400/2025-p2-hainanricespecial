@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from todo.models import db
 from todo.models.todo import Todo
-from datetime import datetime
+from datetime import datetime, timedelta
  
 api = Blueprint('api', __name__, url_prefix='/api/v1') 
 
@@ -23,8 +23,28 @@ def health():
 
 @api.route('/todos', methods=['GET'])
 def get_todos():
-    todos = Todo.query.all()
+    # Get the all of the todos
+    query = Todo.query
     result = []
+
+    # Check for completed tasks
+    completed = request.args.get('completed')
+
+    # Check for tasks 5 days into the future
+    window = request.args.get('window', type=int)
+
+    # Filters for completed todo tasks.
+    if completed is not None:
+        completed = completed.lower() == 'true'
+        query = query.filter(Todo.completed == completed)
+
+    # Filters for 5 days.
+    if window is not None:
+        current_date = datetime.now()
+        future_date = current_date + timedelta(days=window)
+        query = query.filter(Todo.deadline_at <= future_date)
+
+    todos = query.all()
 
     for todo in todos:
         result.append(todo.to_dict())
@@ -50,6 +70,7 @@ def create_todo():
         description=request.json.get('description'),
         completed=request.json.get('completed', False),
     )
+
     if 'deadline_at' in request.json:
         todo.deadline_at = datetime.fromisoformat(request.json.get('deadline_at'))
     
@@ -59,6 +80,8 @@ def create_todo():
     # Commits the changes to the database
     # Must be called for the changes to be saved
     db.session.commit()
+
+    print(todo.to_dict())
 
     """Create a new todo item and return the created item"""
     return jsonify(todo.to_dict()), 201
@@ -83,6 +106,7 @@ def update_todo(todo_id):
 def delete_todo(todo_id):
 
     todo = Todo.query.get(todo_id)
+    
     if todo is None:
          return jsonify({'error': 'Todo not found'}), 404
 
