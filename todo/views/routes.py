@@ -68,6 +68,15 @@ def create_todo():
     # Create a parameter for allowed fields
     allowed_parameters = {'title', 'description', 'completed', 'created_at', 'updated_at', 'deadline_at'}
 
+    # Check for erroneous fields.
+    if not set(request.json.keys()).issubset(allowed_parameters):
+        print(set(request.json.keys()))
+        return jsonify({'error': 'Erroneous field detected.'}), 400
+    
+    # Check for missing title
+    if request.json.get('title') is None:
+        return jsonify({'error': 'Title must not be missing'}), 400
+
     todo = Todo(
         title=request.json.get('title'),
         description=request.json.get('description'),
@@ -77,9 +86,7 @@ def create_todo():
     if 'deadline_at' in request.json:
         todo.deadline_at = datetime.fromisoformat(request.json.get('deadline_at'))
 
-    # Check for erroneous fields.
-    if set(request.json.keys()) not in allowed_parameters:
-         return jsonify({'error': 'Erroneous field detected.'}), 400
+
     
     # Adds a new record to the database or will an update an existing record
     db.session.add(todo)
@@ -104,7 +111,7 @@ def update_todo(todo_id):
     allowed_parameters = {'title', 'description', 'completed', 'created_at', 'updated_at', 'deadline_at'}
 
     # Check for erroneous fields.
-    if set(request.json.keys()) not in allowed_parameters:
+    if not set(request.json.keys()).issubset(allowed_parameters):
          return jsonify({'error': 'Erroneous field detected.'}), 400
 
     # Stop any ID change
